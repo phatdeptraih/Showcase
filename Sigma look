@@ -1,0 +1,41 @@
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local runService = game:GetService("RunService")
+local camera = workspace.CurrentCamera
+
+local head = character:WaitForChild("Head")
+local humanoid = character:WaitForChild("Humanoid")
+
+-- Đảm bảo nhân vật đang ở chế độ R15
+if humanoid.RigType ~= Enum.HumanoidRigType.R15 then
+	warn("Script chỉ hoạt động với nhân vật R15!")
+	return
+end
+
+-- Gắn Motor6D để điều chỉnh đầu
+local neck = head:WaitForChild("Neck")
+
+-- Góc gốc của cổ
+local originalNeckC0 = neck.C0
+
+runService.RenderStepped:Connect(function()
+	local rootPart = character:FindFirstChild("HumanoidRootPart")
+	if not rootPart then return end
+
+	-- Tính toán góc nhìn từ đầu đến chuột
+	local direction = (camera.CFrame.Position - head.Position).Unit
+	local lookCFrame = CFrame.new(Vector3.new(), direction)
+
+	local neckRotation = lookCFrame:ToEulerAnglesYXZ()
+	local x, y, z = neckRotation
+
+	-- Giới hạn góc quay đầu
+	local maxYaw = math.rad(60)
+	local maxPitch = math.rad(30)
+
+	y = math.clamp(y, -maxYaw, maxYaw)
+	x = math.clamp(x, -maxPitch, maxPitch)
+
+	-- Cập nhật cổ nhân vật
+	neck.C0 = originalNeckC0 * CFrame.Angles(x, y, 0)
+end)

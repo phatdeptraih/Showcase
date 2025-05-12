@@ -1,0 +1,56 @@
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+local uis = game:GetService("UserInputService")
+local flying = false
+local speed = 50
+
+local bodyGyro = Instance.new("BodyGyro")
+local bodyVelocity = Instance.new("BodyVelocity")
+
+function startFlying()
+	flying = true
+	bodyGyro.P = 9e4
+	bodyGyro.maxTorque = Vector3.new(9e9, 9e9, 9e9)
+	bodyGyro.cframe = humanoidRootPart.CFrame
+	bodyGyro.Parent = humanoidRootPart
+
+	bodyVelocity.velocity = Vector3.new(0, 0, 0)
+	bodyVelocity.maxForce = Vector3.new(9e9, 9e9, 9e9)
+	bodyVelocity.Parent = humanoidRootPart
+
+	while flying do
+		wait()
+		bodyGyro.CFrame = workspace.CurrentCamera.CFrame
+		local moveDirection = Vector3.new()
+		if uis:IsKeyDown(Enum.KeyCode.W) then
+			moveDirection = moveDirection + workspace.CurrentCamera.CFrame.LookVector
+		end
+		if uis:IsKeyDown(Enum.KeyCode.S) then
+			moveDirection = moveDirection - workspace.CurrentCamera.CFrame.LookVector
+		end
+		if uis:IsKeyDown(Enum.KeyCode.A) then
+			moveDirection = moveDirection - workspace.CurrentCamera.CFrame.RightVector
+		end
+		if uis:IsKeyDown(Enum.KeyCode.D) then
+			moveDirection = moveDirection + workspace.CurrentCamera.CFrame.RightVector
+		end
+		bodyVelocity.Velocity = moveDirection.unit * speed
+	end
+end
+
+function stopFlying()
+	flying = false
+	bodyGyro:Destroy()
+	bodyVelocity:Destroy()
+end
+
+uis.InputBegan:Connect(function(input)
+	if input.KeyCode == Enum.KeyCode.F then
+		if flying then
+			stopFlying()
+		else
+			startFlying()
+		end
+	end
+end)
